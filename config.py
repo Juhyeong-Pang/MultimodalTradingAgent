@@ -8,7 +8,7 @@ class Config:
     VOCAB_SIZE = 30000
     EMBED_DIM = 128
     NUM_HEAD = 8
-    FF_DIM = 512
+    FF_DIM = 128
     NUM_LAYERS = 4
 
 config = Config()
