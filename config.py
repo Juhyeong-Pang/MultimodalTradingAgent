@@ -2,13 +2,13 @@ from dataclasses import dataclass
 
 @dataclass
 class Config:
-    MAX_LEN = 256
-    BATCH_SIZE = 32
-    LR = 0.001
+    MAX_LEN = 128
+    BATCH_SIZE = 16
+    LR = 2e-5
     VOCAB_SIZE = 30000
     EMBED_DIM = 128
-    NUM_HEAD = 8
-    FF_DIM = 128
-    NUM_LAYERS = 4
+    NUM_HEAD = 4
+    FF_DIM = 512
+    NUM_LAYERS = 2
 
 config = Config()
