@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Config:
-    MAX_LEN = 128
+    MAX_LEN = 16
     BATCH_SIZE = 16
     LR = 2e-5
     VOCAB_SIZE = 30000
