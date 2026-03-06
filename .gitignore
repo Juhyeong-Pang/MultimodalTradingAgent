@@ -9,3 +9,6 @@ mlm_dataset_final
 /data/aclImdb
 Quant_New
 /data
+.ipynb_checkpoints
+/models/*.h5
+
