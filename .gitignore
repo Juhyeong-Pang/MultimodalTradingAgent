@@ -1,5 +1,3 @@
-quant/
-quant_fresh/
 Resarch/
 mlm_dataset_final.zip
 mlm_model_weights.h5
@@ -7,8 +5,10 @@ model_checkpoint.keras
 *.h5
 mlm_dataset_final
 /data/aclImdb
-Quant_New
 /data
 .ipynb_checkpoints
 /models/*.h5
-
+.env
+gemma-keras-gemma_2b_en-v3.tar.gz
+/gemma_model
+/.venv
