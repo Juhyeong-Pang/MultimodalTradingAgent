@@ -1,4 +1,5 @@
 import os
+import sys
 import warnings
 
 import numpy as np
@@ -13,10 +14,12 @@ import pandas_ta as ta
 
 import yfinance as yf
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 warnings.filterwarnings("ignore", category=UserWarning, module="keras")
 
-MODEL_WEIGHT_PATH = os.path.join("models", "weights", "march_sixth_4Layers.weights.h5")
+MODEL_WEIGHT_PATH = os.path.join(BASE_DIR, "models", "weights", "CNN_LSTM_18_features_4.weights.h5")
 
 def apply_ssa_trend(series, window = 15, lookback = 60):
     n_total = len(series)
@@ -32,7 +35,16 @@ def apply_ssa_trend(series, window = 15, lookback = 60):
         K = N - L + 1
         X = np.column_stack([sub_series[i:i+L] for i in range(K)])
         
-        U, Sigma, VT = np.linalg.svd(X, full_matrices=False)
+        try:
+            U, Sigma, VT = np.linalg.svd(X, full_matrices=False)
+        except np.linalg.LinAlgError:
+            # print("np.linalg.LinAlgError")
+            jitter = np.random.normal(0, 1e-9, X.shape)
+            try:
+                U, Sigma, VT = np.linalg.svd(X + jitter, full_matrices=False)
+            except np.linalg.LinAlgError:
+                result[t] = series[t]
+                continue
         
         X1 = Sigma[0] * np.outer(U[:, 0], VT[0, :])
         
@@ -150,23 +162,23 @@ def get_full_dataset(tickers, period="1y", window_size=60, test_size=0.2):
     return X_train, X_test, y_train, y_test
 
 def get_data_for_prediction(ticker, period="120d", window_size=60):
-    df, feature_cols, _ = get_dataset_columns(ticker, period=period, window=window_size)
+    df, feature_cols, _ = get_dataset_columns(ticker, period=period, window_size=window_size)
 
     if len(df) < window_size:
         raise ValueError("Not enough rows")
 
-    X = df[feature_cols].iloc[-window_size:].values
+    x = df[feature_cols].iloc[-window_size:].values
 
-    if np.isnan(X).any():
+    if np.isnan(x).any():
         raise ValueError("NaN detected in prediction window")
 
-    X = normalize_window(X)
+    x = normalize_window(x)
 
-    X = X.reshape(1, window_size, len(feature_cols))
+    x = x.reshape(1, window_size, len(feature_cols))
 
-    return X
+    return x
 
-def get_CNN_LSTM(window_size=60, feature_num=3):
+def get_CNN_LSTM(window_size=60, feature_num=18):
     dropout_rate = 0.2
     
     input_layer = layers.Input(shape=(window_size, feature_num), name="Input")
@@ -214,9 +226,8 @@ def save_model_weights(model, file_name, folder_name):
     model.save_weights(save_path)
     print(f"model saved to: {save_path}")
 
-def load_TA_model():
-    model = get_CNN_LSTM()
+def load_TA_model(window_size=60, feature_num=18):
+    model = get_CNN_LSTM(window_size=window_size, feature_num=feature_num)
     model.load_weights(MODEL_WEIGHT_PATH)
 
     return model
-    

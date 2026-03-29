@@ -39,6 +39,6 @@ INPUT_STR = """
 LSTM Prediction: {lstm_output}
 BERT Sentiment: {bert_output}
 Opening Price: ${open_price}
-Cash: ${cash}
+Cash: ${current_cash}
 Current Holdings: {shares_owned} shares
 """

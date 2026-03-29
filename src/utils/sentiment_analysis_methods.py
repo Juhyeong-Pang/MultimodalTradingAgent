@@ -1,4 +1,5 @@
 import os
+import sys
 import warnings
 
 import numpy as np
@@ -13,18 +14,22 @@ import keras_hub
 import keras
 from keras import layers, models
 
-from config import config
+from src.config import config
 
 from pprint import pprint
 import nlpaug.augmenter.word as naw
+from pygooglenews import GoogleNews
 
 import nltk
+from nltk.corpus import wordnet
+import builtins
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 warnings.filterwarnings("ignore", category=UserWarning, module="keras")
 
-PRETRAINED_MODEL_WEIGHT_PATH = os.path.join("models", "weights", "model_4L_weights_cp_best.weights.h5")
-MODEL_WEIGHT_PATH = os.path.join("models", "weights", "march_sixth_4Layers.weights.h5")
+PRETRAINED_MODEL_WEIGHT_PATH = os.path.join(BASE_DIR, "models", "weights", "model_4L_weights_cp_best.weights.h5")
+MODEL_WEIGHT_PATH = os.path.join(BASE_DIR, "models", "weights", "march_sixth_4Layers.weights.h5")
 
 def custom_standardization(input_data):
     lowercase = tf.strings.lower(input_data)
@@ -47,7 +52,7 @@ def get_vectorize_layer(texts, vocab_size, max_seq, special_tokens=["[MASK]"]):
     vectorize_layer.set_vocabulary(vocab)
     return vectorize_layer
 
-NEWS_TEXT_RAW = pd.read_csv(os.path.join("data", "abcnews-date-text.csv"))["headline_text"]
+NEWS_TEXT_RAW = pd.read_csv(os.path.join(BASE_DIR, "data", "abcnews-date-text.csv"))["headline_text"]
 
 VECTORIZE_LAYER = get_vectorize_layer(
     NEWS_TEXT_RAW.tolist(),
@@ -109,10 +114,20 @@ def get_mlm_dataset():
     mlm_ds = mlm_ds.shuffle(1000).batch(config.BATCH_SIZE)
     mlm_ds_small = mlm_ds.shard(num_shards=256, index=0)
 
-nltk.download('wordnet')
-nltk.download('omw-1.4')
-nltk.download('averaged_perceptron_tagger_eng')
-nltk.download('punkt_tab')
+current_dir = os.path.dirname(os.path.abspath(__file__))
+venv_data_path = os.path.join(current_dir, "..", "..", ".venv", "nltk_data")
+os.makedirs(venv_data_path, exist_ok=True)
+
+if venv_data_path not in nltk.data.path:
+    nltk.data.path.insert(0, venv_data_path)
+
+nltk.download('wordnet', download_dir=venv_data_path)
+nltk.download('omw-1.4', download_dir=venv_data_path)
+nltk.download('averaged_perceptron_tagger_eng', download_dir=venv_data_path)
+nltk.download('punkt_tab', download_dir=venv_data_path)
+
+builtins.wordnet = wordnet
+
 AUG = naw.SynonymAug(aug_src='wordnet')
 
 def augment_text(df, target_count, aug=AUG):
@@ -134,6 +149,27 @@ def augment_text(df, target_count, aug=AUG):
             
     df_aug = pd.DataFrame({'Input': aug_samples, 'Output': [label_name] * len(aug_samples)})
     return pd.concat([df, df_aug])
+
+def initialize_le():
+    sentiment_raw = pd.read_csv(os.path.join(BASE_DIR, "data", "sentiment.csv"), encoding='latin1', header=None)
+    sentiment_raw.columns = ["Output", "Input"]
+
+    df_neg = sentiment_raw[sentiment_raw["Output"] == "negative"]
+    df_neu = sentiment_raw[sentiment_raw["Output"] == "neutral"]
+    df_pos = sentiment_raw[sentiment_raw["Output"] == "positive"]
+
+    aug = naw.SynonymAug(aug_src='wordnet')
+    target_n = 2000 
+    df_neg_final = augment_text(df_neg, target_n, aug=aug)
+    df_neu_final = augment_text(df_neu, target_n, aug=aug)
+    df_pos_final = augment_text(df_pos, target_n, aug=aug)
+
+    final_df = pd.concat([df_neg_final, df_neu_final, df_pos_final]).sample(frac=1, random_state=42).reset_index(drop=True)
+
+    le = LabelEncoder()
+    le.fit_transform(final_df['Output'])
+    return le
+
 
 def bert_module(query, key, value, i, mask=None):
     attention_output = layers.MultiHeadAttention(
@@ -181,7 +217,7 @@ class MaskedLanguageModel(keras.Model):
     def metrics(self, loss_tracker=LOSS_TRACKER):
         return [loss_tracker]
     
-def create_masked_language_bert_model():
+def create_masked_language_bert_model(vectorize_layer=VECTORIZE_LAYER):
     inputs = layers.Input(shape=(config.MAX_LEN,), name="Input")
     
     word_embeddings = layers.Embedding(
@@ -304,8 +340,7 @@ def create_classifier_bert_model(pretrained_bert_model):
     )
     return classifier_model
 
-def predict(text, model):
-    le = LabelEncoder()
+def predict(text, model, le):
     text_encoded = encode(text)
     # print("Encoded Text: ", text_encoded)
     
@@ -374,3 +409,10 @@ def load_SA_model(vectorize_layer=VECTORIZE_LAYER):
     classifier_model = create_classifier_bert_model(pretrained_bert_model)
     classifier_model.load_weights(MODEL_WEIGHT_PATH)
     return classifier_model
+
+GN = GoogleNews(lang='en', country='US')
+def get_news_for_prediction(ticker, gn=GN):
+    search_query = f'stock:{ticker}'
+    google_news = gn.search(search_query, when='1d')
+
+    return google_news['entries']
