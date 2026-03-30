@@ -16,10 +16,137 @@ Stock Price / Metrics Analysis Model and News Headline Analysis Team will work a
 
 Decision Making Model will be referring to general market situations (inflation, etc) and insights generated from Analysis Team and decide what actions to take.
 
-## File structure
+### Key Features
 
-d
+- **Multi-Modal Decision Engine**: Integrated numerical stock data and news sentiment analysis to implement holistic trading strategies.
 
-## Start
+- **Denoised Forecasting**: Applied `SSA` (Singular Spectrum Analysis) method and constructed a `CNN-LSTM` hybrid model to predict price trends with reduced market noise.
 
-### install
+- **Financial Sentiment Analysis**: Implemented a fine-tuned `BERT model` to classify market sentiment from the latest 100 news headlines.
+
+- **LLM-Powered Reasoning**: Employed `GPT-4o-mini` to synthesize model insights and macro-economic factors for final trade execution (`Buy/Sell/Hold`).
+
+- **Infrastructure Management**: Used `uv` and `Docker` for rapid dependency management and consistent environment reproduction.
+
+### Tech Stack
+
+- **Language**: Python 3.11+
+- **Environment**: uv, Docker
+- **AI/ML**: keras, openai (gpt-4o-mini)
+- **Database**: SQLite3
+
+## Project Structure
+
+```plain text
+Quant
+ ┣ models
+ ┃ ┣ archive
+ ┃ ┣ weights
+ ┃ ┃ ┣ CNN_LSTM_18_features_4.weights.h5
+ ┃ ┃ ┣ march_sixth_4Layers.weights.h5
+ ┃ ┃ ┗ model_4L_weights_cp_best.weights.h5
+ ┣ notebooks
+ ┃ ┣ archive
+ ┃ ┣ Decision.ipynb
+ ┃ ┣ gemma2b.ipynb
+ ┃ ┣ train_sentiment_analysis.ipynb
+ ┃ ┗ train_trend_analysis.ipynb
+ ┣ src
+ ┃ ┣ models
+ ┃ ┃ ┣ backtester.py
+ ┃ ┃ ┣ decision_maker.py
+ ┃ ┃ ┣ sentiment_analysis.py
+ ┃ ┃ ┣ trader.py
+ ┃ ┃ ┗ trend_analysis.py
+ ┃ ┣ scripts
+ ┃ ┃ ┗ Recent_DataLoader.py
+ ┃ ┣ utils
+ ┃ ┃ ┣ evaluation_methods.py
+ ┃ ┃ ┣ sentiment_analysis_methods.py
+ ┃ ┃ ┗ trend_analysis_methods.py
+ ┃ ┣ config.py
+ ┃ ┗ prompts.py
+ ┣ data
+ ┃ ┣ abcnews-date-text.csv
+ ┃ ┣ gemma_finetune.json
+ ┃ ┣ mlm_dataset_final.zip
+ ┃ ┗ sentiment.csv
+ ┣ .env
+ ┣ backtesting_trading_db.db
+ ┣ trading_db.db
+ ┣ Makefile
+ ┣ README.md
+ ┗ main.py
+```
+
+## Quick Start
+
+Enter your Open AI API key first, then call make launch. It might take a while for this program to start.
+
+```bash
+echo "OPENAI_API_KEY=your_api_key" > .env
+
+make launch
+```
+
+Try the `/trade` endpoint by entering a valid ticker (e.g., AAPL).
+
+## Backtesting Result
+
+The model's performance was evaluated using seven major tech stocks (`AAPL`, `MSFT`, `GOOGL`, `AMZN`, `META`, `TSLA`, `NFLX`) for the period of `February 1, 2025` to `February 28, 2025` (1 Month).
+
+The model was first given `$100,000`. The result of backtesting was as follows:
+
+|        Strategy         | Final Asset | Return |
+| :---------------------: | :---------: | :----: |
+| Using MMTA (this model) |  $99434.50  | -0.57% |
+|       Buy & Hold        |  $94440.89  | -5.56% |
+
+<img src="assets/graph/result_AAPL_MSFT_GOOGL_20260330_022127.png" width=500>
+
+The model performed 4.99%p better than a simple buy & hold strategy, but looking at the pattern of what actions the model chose to take, this model is never good enough to be used in real life.
+
+Future improvements will be explained later in this page.
+
+## Model Explanation
+
+### Trend Analysis
+
+- This model predicts same-day closing price based on the opening price history of the past 60 days.
+- Applied `SSA` method to denoise the historical dataset.
+- Implemented `CNN-LSTM` hybrid model to denoise the input data and capture patterns.
+
+### Sentiment Analysis
+
+- Implemented `BERT` model to classify recent 100 news headlines as either Positive / Neutral / Negative
+- Applied `MLM` method to pre-train `BERT` model so that it can better capture relationships between words.
+- Fine-tuned the model to better predict financial news.
+
+### Decision Maker
+
+- First tried to use gemma2b model locally. However, the executtion time was too long when running on my mac, and its reasoning ability wasn't good enough to logically come up with a solid decision.
+- Used openAi's gpt-o4=mini API that receives ipnut values from Trend Anlaysis Model and Sentiment Analysis Model.
+
+## Future Improvement
+
+1. Further denoise historical dataset used to train trend analysis model and find a better technique for themodel to capture patterns with higher accuracy.
+   - The Trend Analysis Model isn't really that accruate. Its bidirectional accuracy is 52%, which is merely better than guessing.
+
+2. Train sentiment analysis model with larger dataset so that it can better understand the news headline.
+   - Current BERT Model was trained with only 30000 vocabularies, so about half of the news headlines contained `unknown` token, hindering the model to accurately understand the headline.
+
+3. Implement sentiment analysis model using local LLM Model instead of depending on Open AI Models that spends token every time it trades.
+
+4. Use Ablation Study method to better interpret the model result.
+   - I have not backtested the model thoroughly enough as I did not want to use too much OpenAI Token. After improving the models as described above, I would love to perform Ablatoin Studies to better understand each model's role in the overall process.
+
+5. Connect Stock Trading API to actually trade stocks.
+
+6. Implement Frontend page to better interact with the model.
+
+---
+
+### Additional Informations
+
+- For More information, please visit : [Multi-modal Trading AI Agent](https://velog.io/@juhyeong13579/series/Multi-modal-Trading-AI-Agent)
+- The core motivation for this project was to learn and gain hands on experience with Deep learning models, and I believe I have learned a lot from it. However, I felt that I lack basic knowledge and that I need to work more on learning the fundamental concepts before working forward.
