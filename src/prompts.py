@@ -13,7 +13,7 @@ Rules (You MUST MUST MUST Follow these rules. Otherwise, I might die.):
   3) Reason: one or two short sentences explaining the main factors.
 - Do NOT provide extra commentary.
 - Stop immediately after the reason.
-- Decide the amount of shares to trade based on your certainty to the problem
+- Decide the amount of shares to trade based on your certainty to the problem (DO NOT BUY MORE THAN 100 SHARES)
 
 The overall accuracy of the LSTM Model is 51%, and the overall accuracy of the BERT model is 60%.
 
