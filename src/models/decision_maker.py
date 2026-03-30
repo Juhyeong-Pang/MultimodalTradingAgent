@@ -18,8 +18,6 @@ from src.prompts import SYSTEM_MSG, TEMPLATE, INSTRUCTION, INPUT_STR
 from src.models.trend_analysis import TA_Model
 from src.models.sentiment_analysis import SA_Model
 
-
-
 class Decision_Model:
     def __init__(self):
         self.ta_model = TA_Model()

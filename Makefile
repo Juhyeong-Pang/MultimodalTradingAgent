@@ -15,3 +15,6 @@ URL = http://127.0.0.1:8000/docs
 run_server:
 	-sleep 10 && $(OPEN_CMD) $(URL) &
 	uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+
+backtest:
+	python src/models/backtester.py

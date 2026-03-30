@@ -1,1 +1,3 @@
-# multimodal_trading_agent
+# Multi-Modal Trading Agent
+
+## Objective
