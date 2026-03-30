@@ -2,9 +2,7 @@
 
 ## Motivation 
 
-To practice designing and implementing a multi modal AI agent.
-
-Trading Agent seemed to be a perfect project to work with various types of deep learning model.
+To practice designing and implementing a multi modal AI agent and working with various types of deep learning model.
 
 ## Objective
 
