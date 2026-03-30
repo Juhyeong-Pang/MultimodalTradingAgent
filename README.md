@@ -1,6 +1,6 @@
-# Multi-Modal Trading Agent
+# Multi-Modal Trading Agent 🤖📈 
 
-## Motivation
+## Motivation 
 
 To practice designing and implementing a multi modal AI agent, and Trading Agent seemed to be a perfect project to work with various types of deep learning model.
 
