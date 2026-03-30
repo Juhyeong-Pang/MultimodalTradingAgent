@@ -15,3 +15,6 @@ gemma-keras-gemma_2b_en-v3.tar.gz
 .DS_Store
 .virtual_documents
 __pyycache__
+.idea
+/__pyycache__
+*/__pyycache__
