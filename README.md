@@ -81,7 +81,7 @@ MMTA
 
 ## Quick Start
 
-Enter your Open AI API key first, then call make launch. It might take a while for this program to start.
+Enter your Open AI API key first, then call ``make launch``. It might take a while for this program to start.
 
 ```bash
 echo "OPENAI_API_KEY=your_api_key" > .env
