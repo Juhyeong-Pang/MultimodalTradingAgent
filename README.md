@@ -38,7 +38,7 @@ Decision Making Model will be referring to general market situations (inflation,
 ## Project Structure
 
 ```plain text
-Quant
+MMTA
  ┣ models
  ┃ ┣ archive
  ┃ ┣ weights
