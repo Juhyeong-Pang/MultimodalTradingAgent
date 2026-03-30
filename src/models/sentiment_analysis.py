@@ -36,6 +36,7 @@ class SA_Model():
         neutral_count = 0
 
         tot = len(news_articles)
+        tot = tot if tot > 0 else 1
         for entry in news_articles:
             result = self.predict_single(entry['title'])
             if result is not None:
